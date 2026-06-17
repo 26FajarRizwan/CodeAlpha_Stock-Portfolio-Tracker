@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Stock Portfolio Tracker — CodeAlpha</title>
+<style>
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: linear-gradient(160deg, #1f2333 0%, #11131c 100%);
+    font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .card {
+    background: #20243a;
+    border: 1px solid #353c5c;
+    border-radius: 16px;
+    padding: 30px 36px 36px;
+    width: 560px;
+    max-width: 100%;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.45);
+    color: #e9ecf5;
+  }
+
+  h1 {
+    margin: 0 0 4px;
+    font-size: 26px;
+    color: #ffd166;
+    letter-spacing: 1px;
+    text-align: center;
+  }
+
+  .subtitle {
+    font-size: 13px;
+    color: #8b91ab;
+    margin-bottom: 22px;
+    text-align: center;
+  }
+
+  /* ----- Available stocks panel ----- */
+  .stocks-panel {
+    background: #161829;
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 20px;
+  }
+
+  .stocks-panel h2 {
+    font-size: 14px;
+    color: #9aa3c7;
+    margin: 0 0 10px;
+    font-weight: normal;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .stocks-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .stock-chip {
+    background: #272c47;
+    border-radius: 8px;
+    padding: 8px 10px;
+    text-align: center;
+    font-size: 13px;
+  }
+
+  .stock-chip .sym { color: #6fd3a4; font-weight: bold; }
+  .stock-chip .price { color: #aab0cc; font-size: 12px; }
+
+  /* ----- Add stock form ----- */
+  .add-form {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+
+  select, input[type="number"] {
+    background: #272c47;
+    border: 1px solid #3a4070;
+    color: #e9ecf5;
+    border-radius: 8px;
+    padding: 9px 10px;
+    font-size: 14px;
+  }
+
+  select { flex: 1.4; min-width: 110px; }
+  input[type="number"] { flex: 1; min-width: 80px; }
+
+  .add-btn, .save-btn, .reset-btn {
+    border: none;
+    border-radius: 8px;
+    padding: 9px 16px;
+    font-weight: bold;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.08s;
+  }
+
+  .add-btn { background: #6fd3a4; color: #11131c; }
+  .add-btn:hover { background: #87e0b8; }
+
+  .error-msg {
+    color: #ff8a8a;
+    font-size: 13px;
+    min-height: 18px;
+    margin-bottom: 8px;
+  }
+
+  /* ----- Portfolio table ----- */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 14px;
+    font-size: 14px;
+  }
+
+  thead th {
+    text-align: left;
+    color: #9aa3c7;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 8px 10px;
+    border-bottom: 1px solid #3a4070;
+  }
+
+  tbody td {
+    padding: 9px 10px;
+    border-bottom: 1px solid #2a2f4d;
+  }
+
+  tbody tr:hover { background: #272c47; }
+
+  td.remove-cell {
+    text-align: right;
+    cursor: pointer;
+    color: #ff8a8a;
+    font-weight: bold;
+  }
+
+  .empty-row td {
+    text-align: center;
+    color: #6b7094;
+    padding: 16px;
+    font-style: italic;
+  }
+
+  /* ----- Total ----- */
+  .total-box {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #161829;
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 18px;
+  }
+
+  .total-box .label { color: #aab0cc; font-size: 14px; }
+  .total-box .value { color: #ffd166; font-size: 22px; font-weight: bold; }
+
+  .actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+  }
+
+  .save-btn { background: #4d7cff; color: white; }
+  .save-btn:hover { background: #6b91ff; }
+
+  .reset-btn { background: #343a5c; color: #e9ecf5; }
+  .reset-btn:hover { background: #454d78; }
+
+  .saved-msg {
+    text-align: center;
+    color: #6fd3a4;
+    font-size: 13px;
+    margin-top: 10px;
+    min-height: 16px;
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h1>📊 Stock Portfolio Tracker</h1>
+  <div class="subtitle">CodeAlpha Internship — Task 2</div>
+
+  <div class="stocks-panel">
+    <h2>Available stocks</h2>
+    <div class="stocks-grid" id="stocks-grid"></div>
+  </div>
+
+  <div class="add-form">
+    <select id="stock-select"></select>
+    <input type="number" id="qty-input" placeholder="Quantity" min="1">
+    <button class="add-btn" onclick="addStock()">+ Add</button>
+  </div>
+  <div class="error-msg" id="error-msg"></div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Stock</th>
+        <th>Qty</th>
+        <th>Price</th>
+        <th>Value</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody id="portfolio-body"></tbody>
+  </table>
+
+  <div class="total-box">
+    <span class="label">Total Investment</span>
+    <span class="value" id="total-value">$0.00</span>
+  </div>
+
+  <div class="actions">
+    <button class="save-btn" onclick="saveAsCSV()">💾 Save as CSV</button>
+    <button class="reset-btn" onclick="resetPortfolio()">🔄 Reset</button>
+  </div>
+  <div class="saved-msg" id="saved-msg"></div>
+</div>
+
+<script>
+  // SAME hardcoded prices as the Python version (stock_tracker.py) — keep these in sync.
+  const STOCK_PRICES = {
+    AAPL: 180,
+    TSLA: 250,
+    GOOGL: 140,
+    AMZN: 175,
+    MSFT: 420,
+    NFLX: 670,
+    META: 480
+  };
+
+  let portfolio = {}; // symbol -> quantity
+
+  function init() {
+    // Build stocks info panel
+    const grid = document.getElementById("stocks-grid");
+    grid.innerHTML = "";
+    for (const [symbol, price] of Object.entries(STOCK_PRICES)) {
+      const chip = document.createElement("div");
+      chip.className = "stock-chip";
+      chip.innerHTML = `<div class="sym">${symbol}</div><div class="price">$${price}/share</div>`;
+      grid.appendChild(chip);
+    }
+
+    // Build select dropdown
+    const select = document.getElementById("stock-select");
+    select.innerHTML = "";
+    for (const symbol of Object.keys(STOCK_PRICES)) {
+      const opt = document.createElement("option");
+      opt.value = symbol;
+      opt.textContent = symbol;
+      select.appendChild(opt);
+    }
+
+    render();
+  }
+
+  function addStock() {
+    const symbol = document.getElementById("stock-select").value;
+    const qtyInput = document.getElementById("qty-input");
+    const qty = parseInt(qtyInput.value, 10);
+    const errorMsg = document.getElementById("error-msg");
+
+    if (!qty || qty <= 0) {
+      errorMsg.textContent = "⚠ Enter a valid positive quantity.";
+      return;
+    }
+
+    errorMsg.textContent = "";
+    portfolio[symbol] = (portfolio[symbol] || 0) + qty;
+    qtyInput.value = "";
+    render();
+  }
+
+  function removeStock(symbol) {
+    delete portfolio[symbol];
+    render();
+  }
+
+  function resetPortfolio() {
+    portfolio = {};
+    document.getElementById("saved-msg").textContent = "";
+    render();
+  }
+
+  function calculateTotal() {
+    let total = 0;
+    const rows = [];
+    for (const [symbol, qty] of Object.entries(portfolio)) {
+      const price = STOCK_PRICES[symbol];
+      const value = qty * price;
+      total += value;
+      rows.push({ symbol, qty, price, value });
+    }
+    return { rows, total };
+  }
+
+  function render() {
+    const { rows, total } = calculateTotal();
+    const tbody = document.getElementById("portfolio-body");
+    tbody.innerHTML = "";
+
+    if (rows.length === 0) {
+      tbody.innerHTML = `<tr class="empty-row"><td colspan="5">No stocks added yet</td></tr>`;
+    } else {
+      for (const { symbol, qty, price, value } of rows) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${symbol}</td>
+          <td>${qty}</td>
+          <td>$${price}</td>
+          <td>$${value.toLocaleString()}</td>
+          <td class="remove-cell" onclick="removeStock('${symbol}')">✕</td>
+        `;
+        tbody.appendChild(tr);
+      }
+    }
+
+    document.getElementById("total-value").textContent =
+      "$" + total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function saveAsCSV() {
+    const { rows, total } = calculateTotal();
+    const savedMsg = document.getElementById("saved-msg");
+
+    if (rows.length === 0) {
+      savedMsg.textContent = "⚠ Add stocks before saving.";
+      savedMsg.style.color = "#ff8a8a";
+      return;
+    }
+
+    let csv = "Stock,Quantity,Price Per Share,Total Value\n";
+    for (const { symbol, qty, price, value } of rows) {
+      csv += `${symbol},${qty},${price},${value}\n`;
+    }
+    csv += `\n,,Total Investment,${total}\n`;
+
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "portfolio_summary.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+
+    savedMsg.style.color = "#6fd3a4";
+    savedMsg.textContent = "📄 portfolio_summary.csv downloaded";
+  }
+
+  init();
+</script>
+
+</body>
+</html>
